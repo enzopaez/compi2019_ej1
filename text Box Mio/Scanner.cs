@@ -343,13 +343,17 @@ public class Scanner {
         //return retorno;
         return hashTableKeywords.ContainsValue(cadena);
     }
+            
     static void ReadName(Token t)
     {
-        while ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || ch == '_')
-        {
-            t.str = t.str+ch;
-            NextCh();
-        }
+            char c=ch;
+            while ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || ch == '_' || ('0' <= ch && '9' >= ch) )
+            {    
+                    t.str = t.str+ch;
+                    c = ch;
+                    NextCh();
+            }
+            
         if (esPalabraClave(t.str))
             switch (t.str)
             {
@@ -392,9 +396,21 @@ public class Scanner {
 
             }
         else
-        {
-            t.kind = Token.IDENT;
+        {   
+            int j = t.str.Length;
+            string cadena = t.str;
+            
+            if(cadena[j-1] == '_')
+            {
+                
+                throw new ErrorMio(t.line,t.col+j-1,1,"La cadena no puede terminar en _");
+   
+            }else t.kind = Token.IDENT;
+                   
+                        
+                    
         }
+
         
     }
     static void ReadNumber(Token t)

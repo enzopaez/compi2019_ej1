@@ -6,7 +6,7 @@
  5.NumberOrCharConst =  number | charConst ;
  6.VarDecl = Type  ident IdentifiersOpc ";".
  7.IdentifiersOpc =  . | "," ident IdentifiersOpc.
- 8.MethodDecl = TypeOrVoid  ident "(" Pars ")" PosDeclars Block.
+ 8.MethodDecl = TypeOrVoid  ident "(" Pars ")" Block.
  9.TypeOrVoid  = Type | "void".
 10.Pars = . | FormPar CommaFormParsOpc. 
 11.CommaFormParsOpc =  . |  "," FormPar CommaFormParsOpc. 
@@ -14,7 +14,7 @@
 13.LbrackOpc = . | "[" "]".
 14.FormPars	=	 Type ident CommaTypeIdentOpc.
 15.CommaTypeIdentOpc = . |"," Type ident .
-16.Block = "{"  StatementsOpc "}".
+16.Block = "{"  DecloStatementsOpc "}".
 17.StatementsOpc = . | Statement StatementsOpc.
 18.Statement =	Designator RestOfStatement
 	|	"if" "(" Condition ")" Statement ElseOpc
@@ -44,3 +44,5 @@
 34.Mulop = '*' | '/' | '%'.
 35.OpcExprBetweenBrack =  "[" Expr "]".
 36.String_or_Expr = argstring | Expr.
+37.DecloStatements = . | DecloStat DecloStataments
+38.DecloStat = Declaration | Statament 

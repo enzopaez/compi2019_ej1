@@ -377,7 +377,7 @@ namespace at.jku.ssw.cc //Compilador //text_Box_Mio
                 //richTextBox3.Select(richTextBox3.GetFirstCharIndexFromLine(Parser.cantVarLocales - 1) + 0, cantDeRojoQuePinta);
                 int linea = nroInstr + Parser.cantVarLocales - 1; //qqqqq
                 int ver = richTextBox3.GetFirstCharIndexFromLine(linea);
-                richTextBox3.Select(richTextBox3.GetFirstCharIndexFromLine(linea) + 0, cantDeRojoQuePinta);//??????
+                //richTextBox3.Select(richTextBox3.GetFirstCharIndexFromLine(linea) + 0, cantDeRojoQuePinta);//??????
                 richTextBox3.SelectionColor = Color.Red;
 
                 Program1.form1.richTextBox3.SelectionFont =

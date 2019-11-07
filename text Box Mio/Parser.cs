@@ -190,9 +190,13 @@ namespace at.jku.ssw.cc
             ADDOP = 19, MULOP = 20, IDENT = 21;
 
         //static TextWriter output;
+        public static Token tokenx;
+        public static Token laTokenx;
         public static Token token;    // last recognized token
         public static Token laToken;  // lookahead token (not yet recognized)
-        static int la;         // shortcut to kind attribute of lookahead token (laToken.kind)
+        static int la;
+        static int lax;
+        // shortcut to kind attribute of lookahead token (laToken.kind)
 
         /* Symbol table object of currently compiled method. */
         internal static Symbol curMethod;
@@ -207,7 +211,13 @@ namespace at.jku.ssw.cc
             laToken = Scanner.Next();
             //La 1° vez q se ejecuta, token queda con Token(1, 1), laToken con "class" (primer token del programa)
             la = laToken.kind;
+            lax = la;
         }
+        static void Scanx()
+        {
+            laTokenx = Scanner.Next();
+            lax = laTokenx.kind;
+        }   
 
         /* Verifies symbol and reads ahead. */
         static void Check(int expected) //expected viene de la gramatica,  la del laToken que leyó
@@ -320,6 +330,7 @@ namespace at.jku.ssw.cc
             {
                 Console.WriteLine("empieza {"); if (ZZ.readKey) Console.ReadKey();
             }
+
             Check(Token.LBRACE);
             Code.Colorear("token");  //ya lo pinto
             Code.seleccLaProdEnLaGram(0);
@@ -332,7 +343,7 @@ namespace at.jku.ssw.cc
             Code.seleccLaProdEnLaGram(3);//3.MethodDeclsOpc = . | MethodDecl Meth
             Parser.MessageBoxCon3Preg();
             // si "la" pertenece a First(MethodDec) => sólo deben haber metodos
-            while ((la == Token.IDENT || la == Token.VOID) && la != Token.EOF)
+            while (( la==Token.IDENT || la == Token.VOID) && la != Token.EOF)
             {
                 MethodDecl(methodDeclsOpc);  //void Main() int x,i; {val = new Table;....}
             }
@@ -344,6 +355,7 @@ namespace at.jku.ssw.cc
             Code.seleccLaProdEnLaGram(0);
             program.Nodes.Add("}");
             //////----------------------------------------------------------------Grupo 2 20/10/2015------------------------------------------------------
+
             if (ZZ.parser)
             {
                 Console.WriteLine("antes de prog.locals = Tab.topScope.locals; Tab.CloseScope()");
@@ -688,67 +700,71 @@ namespace at.jku.ssw.cc
                     methodDecl.Nodes.Add("')'");
                     MessageBoxCon3Preg();
                 }
+               
+                  System.Windows.Forms.TreeNode posDeclars = new System.Windows.Forms.TreeNode("PosDeclars");
+            /*  block.Nodes.Add(posDeclars); */
+            MessageBoxCon3Preg();
+            Code.seleccLaProdEnLaGram(1);
+            MessageBoxCon3Preg();
+            Code.CreateMetadata(curMethod);  //genera il
+                                             //Declaraciones  por ahora solo decl de var, luego habria q agregar const y clases
+            int k = 0;
+            while (la == Token.IDENT && la != Token.EOF && k!=1 )
+            {
+                //Scanx
+                //laTokenx = Scanner.Next();
                 
-                //Comienza Nodo Declaration.
-                System.Windows.Forms.TreeNode posDeclars = new System.Windows.Forms.TreeNode("PosDeclars");
-                methodDecl.Nodes.Add(posDeclars);
-                MessageBoxCon3Preg();
-                Code.seleccLaProdEnLaGram(1);
-                MessageBoxCon3Preg();
-                //bool encuentraDecl = false;
-                Code.CreateMetadata(curMethod);  //genera il
-                    //Declaraciones  por ahora solo decl de var, luego habria q agregar const y clases
-                    while (la != Token.LBRACE && la != Token.EOF)
-                    //void Main()==> int x,i; {val = new Table;....}
-                    {
-                        if (la == Token.IDENT)
-                        {
-                            //encuentraDecl = true;
-                            Code.Colorear("latoken"); //colorea "int"  en int i; 
-                            //Infiere la 2° opcion de PosDeclars   aaaaaaaa
-                            System.Windows.Forms.TreeNode declaration = new System.Windows.Forms.TreeNode("Declaration");
-                            posDeclars.Nodes.Add(declaration);
-                            posDeclars.ExpandAll();
-                            MessageBoxCon3Preg();
-                            Code.seleccLaProdEnLaGram(2);
-                            System.Windows.Forms.TreeNode varDecl = new System.Windows.Forms.TreeNode("VarDecl");
-                            declaration.Nodes.Add(varDecl);
-                            declaration.ExpandAll();
-                            MessageBoxCon3Preg();
-                            Code.seleccLaProdEnLaGram(6);
-                            VardDecl(Symbol.Kinds.Local, varDecl); // int x,i; en MethodDecl()  con int ya consumido
-                        }
-                        else
-                        {
-                            token = laToken;
-                            Errors.Error("espero una declaracion de variable");
-                        }
-                    }
-                    //Termina Vardecl.
-                Code.seleccLaProdEnLaGram(2);
-
-                if (cantVarLocales > 0)
+                if (la != Token.EQ)
                 {
-                    string instrParaVarsLocs = ".locals init(int32 V_0";
-                    for (int i = 1; i < cantVarLocales; i++)
-                    {
-                        instrParaVarsLocs = instrParaVarsLocs + "," + "\n          int32 V_" + i.ToString(); // +"  ";
-                    }
-                    instrParaVarsLocs = instrParaVarsLocs + ")";
-                    Code.cargaInstr(instrParaVarsLocs);
-
+                    
+                    Code.Colorear("latoken"); //colorea "int"  en int i; 
+                                              //Infiere la 2° opcion de PosDeclars   aaaaaaaa
+                    System.Windows.Forms.TreeNode declaration = new System.Windows.Forms.TreeNode("Declaration");
+                    posDeclars.Nodes.Add(declaration);
+                    posDeclars.ExpandAll();
+                    MessageBoxCon3Preg();
+                    Code.seleccLaProdEnLaGram(2);
+                    System.Windows.Forms.TreeNode varDecl = new System.Windows.Forms.TreeNode("VarDecl");
+                    declaration.Nodes.Add(varDecl);
+                    declaration.ExpandAll();
+                    MessageBoxCon3Preg();
+                    Code.seleccLaProdEnLaGram(6);
+                    VardDecl(Symbol.Kinds.Local, varDecl); // int x,i; en MethodDecl()  con int ya consumido
+                    k = 1;
                 }
-                Code.seleccLaProdEnLaGram(1);
-                MessageBoxCon3Preg();
-                System.Windows.Forms.TreeNode posDeclarsAux = new System.Windows.Forms.TreeNode("PosDeclars");
-                posDeclarsAux.Nodes.Add(".");
-                posDeclarsAux.ExpandAll();
-                posDeclars.Nodes.Add(posDeclarsAux);
-                Code.Colorear("latoken");  //"{"
-                MessageBoxCon3Preg();
-                Code.seleccLaProdEnLaGram(8);
-                MessageBoxCon3Preg();
-                //Comienza Block
+                else
+                {
+                    token = laToken;
+                    Errors.Error("espero una declaracion de variable");
+                }
+            }
+            //Termina Vardecl.
+            Code.seleccLaProdEnLaGram(2);
+
+            if (cantVarLocales > 0)
+            {
+                string instrParaVarsLocs = ".locals init(int32 V_0";
+                for (int i = 1; i < cantVarLocales; i++)
+                {
+                    instrParaVarsLocs = instrParaVarsLocs + "," + "\n          int32 V_" + i.ToString(); // +"  ";
+                }
+                instrParaVarsLocs = instrParaVarsLocs + ")";
+                Code.cargaInstr(instrParaVarsLocs);
+
+            }
+            Code.seleccLaProdEnLaGram(1);
+            MessageBoxCon3Preg();
+            System.Windows.Forms.TreeNode posDeclarsAux = new System.Windows.Forms.TreeNode("PosDeclars");
+            posDeclarsAux.Nodes.Add(".");
+            posDeclarsAux.ExpandAll();
+            posDeclars.Nodes.Add(posDeclarsAux);
+            Code.Colorear("latoken");  //"{"
+            MessageBoxCon3Preg();
+            Code.seleccLaProdEnLaGram(8);
+            MessageBoxCon3Preg();
+
+            //finvariables
+                 
                 Block(methodDecl);  //Bloque dentro de MethodDecl() 
                 curMethod.nArgs = Tab.topScope.nArgs;
                 curMethod.nLocs = Tab.topScope.nLocs;
@@ -1305,6 +1321,7 @@ namespace at.jku.ssw.cc
 
         /// G3 PERUBLOCK Arreglado el arbol de StatementsOpc cuando esta vacio (".")
         /// Y todos los nombres y padre en Block.
+        /// 
         static void Block(System.Windows.Forms.TreeNode methodDecl)
         {
             System.Windows.Forms.TreeNode block = new System.Windows.Forms.TreeNode("Block");
@@ -1318,13 +1335,32 @@ namespace at.jku.ssw.cc
             block.ExpandAll();
             MessageBoxCon3Preg(methodDecl);
             Code.Colorear("token");
-            /////// Agrega 'StatementsOpc' al arbol
-            System.Windows.Forms.TreeNode statementsopc = new System.Windows.Forms.TreeNode("StatementsOpc");
+
+            System.Windows.Forms.TreeNode statementsopc = new System.Windows.Forms.TreeNode("Statements");
             block.Nodes.Add(statementsopc);
             block.ExpandAll();
             MessageBoxCon3Preg(block);
-            Code.seleccLaProdEnLaGram(17);
+            Code.seleccLaProdEnLaGram(37);
             /////// Agrega '.' al arbol si el block esta vacio
+
+            /*
+            while (la != Token.RBRACE && la != Token.EOF)
+            {
+                DecloStat(decloStatementsOpc);
+                haydecl = true;
+            }
+            if (!haydecl)
+            {
+                decloStatementsOpc.Nodes.Add(".");
+                decloStatementsOpc.ExpandAll();
+                MessageBoxCon3Preg(decloStatementsOpc);
+            }
+            while (la != Token.RBRACE)
+            {
+                DecloStatementsOpc(decloStatementsOpc);
+            }
+            */
+
             if (la == Token.RBRACE)
             {
                 Code.Colorear("latoken");
@@ -1332,37 +1368,40 @@ namespace at.jku.ssw.cc
                 statementsopc.ExpandAll();
                 MessageBoxCon3Preg(statementsopc);
             }
-            int ii = 1;
-            while (la != Token.RBRACE)
-            {
-                if ((la == Token.IDENT || la == Token.IF || la == Token.WHILE || la == Token.BREAK
-                  || la == Token.RETURN || la == Token.READ || la == Token.WRITE || la == Token.WRITELN
-                  || la == Token.LBRACE || la == Token.SEMICOLON) && la != Token.EOF)
+
+                 int ii = 1;
+                while (la != Token.RBRACE)
                 {
-                    Code.Colorear("latoken");
-                    System.Windows.Forms.TreeNode statement = new System.Windows.Forms.TreeNode("Statement");
-                    statementsopc.Nodes.Add(statement);
-                    statementsopc.ExpandAll();
-                    MessageBoxCon3Preg(statement);
-                    Code.seleccLaProdEnLaGram(18);
-                    if (ZZ.ParserStatem)
+                    if ((la == Token.IDENT || la == Token.IF || la == Token.WHILE || la == Token.BREAK
+                      || la == Token.RETURN || la == Token.READ || la == Token.WRITE || la == Token.WRITELN
+                      || la == Token.LBRACE || la == Token.SEMICOLON) && la != Token.EOF)
                     {
-                        Console.WriteLine(".......Comienza statement nro:");
-                        Console.Write(ii); Console.WriteLine("->" + laToken.str);
+                        Code.Colorear("latoken");
+                        System.Windows.Forms.TreeNode statement = new System.Windows.Forms.TreeNode("Statement");
+                        statementsopc.Nodes.Add(statement);
+                        statementsopc.ExpandAll();
+                        MessageBoxCon3Preg(statement);
+                        Code.seleccLaProdEnLaGram(18);
+                        if (ZZ.ParserStatem)
+                        {
+                            Console.WriteLine(".......Comienza statement nro:");
+                            Console.Write(ii); Console.WriteLine("->" + laToken.str);
+                        }
+
+                        Statement(statement);  //dentro de block()
+
+                    }//Fin if 
+                    else
+                    {
+                        token.line = Scanner.line; token.col = Scanner.col - 1;
+                        token.str = "?";
+                        Errors.Error("Espero una sentencia");
                     }
+                    ii++;
+                    Code.seleccLaProdEnLaGram(17);
+                }//Fin while
+                
 
-                    Statement(statement);  //dentro de block()
-
-                }//Fin if 
-                else
-                {
-                    token.line = Scanner.line; token.col = Scanner.col - 1;
-                    token.str = "?";
-                    Errors.Error("Espero una sentencia");
-                }
-                ii++;
-                Code.seleccLaProdEnLaGram(17);
-            }//Fin while
             MessageBoxCon3Preg();
             Check(Token.RBRACE);
             Code.seleccLaProdEnLaGram(16);
@@ -1371,6 +1410,47 @@ namespace at.jku.ssw.cc
             Code.Colorear("token");
         }//Fin Block
 
+        /*
+        static void DecloStat(System.Windows.Forms.TreeNode decloStatamentsOpc)
+        {
+            System.Windows.Forms.TreeNode decloStat = new System.Windows.Forms.TreeNode("declaoStat");
+            Code.seleccLaProdEnLaGram(38);
+            decloStatamentsOpc.Nodes.Add(decloStat);
+            decloStatamentsOpc.ExpandAll();
+            MessageBoxCon3Preg(decloStat);
+            switch(la)
+            {
+                case Token.CONST:
+                    System.Windows.Forms.TreeNode Declaration = new System.Windows.Forms.TreeNode("Declaration");
+                    Code.seleccLaProdEnLaGram(2);
+                    decloStat.Nodes.Add(Declaration);
+                    decloStat.ExpandAll();
+                    ConstDecl(Declaration);
+                    break;
+
+                case Token.IDENT:
+                    if (laToken.str == "int" || laToken.str == "char")
+                    {
+                        System.Windows.Forms.TreeNode hijo = new System.Windows.Forms.TreeNode("Declaration");
+                        Code.seleccLaProdEnLaGram(2);
+                        decloStat.Nodes.Add(hijo);
+                        decloStat.ExpandAll();
+                        Code.cargaProgDeLaGram(2);
+
+                        System.Windows.Forms.TreeNode hijo2 = new System.Windows.Forms.TreeNode("Declaration");
+                        hijo.Nodes.Add(hijo2);
+                        Code.cargaProgDeLaGram(6);
+                        
+                    }
+                        break;
+            }
+
+|       }
+        static void DecloStatementsOpc(System.Windows.Forms.TreeNode decloStatementsOpc)
+        {
+            
+        }
+        */
         static void ActPars()
         {
             Item item;
